@@ -1,0 +1,207 @@
+import styled from "styled-components";
+import Card from "./components/Card";
+import { useState } from "react";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import ActionsList from "./components/ActionsList";
+
+function App() {
+  const [list, setList] = useState([
+    {
+      id: "list1-0",
+      name: "Lucas",
+      subItems: [
+        { id: "list1-0-0", name: "lucas1" },
+        { id: "list1-0-1", name: "lucas2" },
+        { id: "list1-0-2", name: "lucas3" },
+      ],
+    },
+    {
+      id: "list1-1",
+      name: "Luan",
+      subItems: [
+        { id: "list1-1-0", name: "luan1" },
+        { id: "list1-1-1", name: "luan2" },
+        { id: "list1-1-2", name: "luan3" },
+      ],
+    },
+    {
+      id: "list1-2",
+      name: "Daniel",
+      subItems: [
+        { id: "list1-2-0", name: "Daniel1" },
+        { id: "list1-2-1", name: "Daniel2" },
+        { id: "list1-2-2", name: "Daniel3" },
+      ],
+    },
+  ]);
+  const [list2, setList2] = useState([
+    { id: "list2-0", name: "Jezz" },
+    { id: "list2-1", name: "Mari" },
+    { id: "list2-2", name: "Aninha" },
+  ]);
+
+  const [newName, setNewName] = useState("");
+
+  const addNameToList = () => {
+    if (newName.trim() === "") return; // Evita adicionar strings vazias
+
+    const newItem = {
+      id: `list1-${list.length}`, // Usando o length como ID
+      name: newName,
+      subItems: [],
+    };
+
+    // Adiciona o novo item à lista
+    setList([...list, newItem]);
+    setNewName(""); // Limpa o input
+  };
+
+  function onDragEnd(result) {
+    const { source, destination } = result;
+
+    console.log("source: ", source);
+    console.log("destination: ", destination);
+
+    // Se não houver destino, não faz nada
+    if (!destination) return;
+
+    // Verifica se o item foi movido para a mesma posição
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+    // Clona as listas
+    const sourceList = source.droppableId === "list1" ? list : list2;
+    const destList = destination.droppableId === "list1" ? list : list2;
+    const setSourceList = source.droppableId === "list1" ? setList : setList2;
+    const setDestList =
+      destination.droppableId === "list1" ? setList : setList2;
+
+    // Remove o item da lista de origem
+    const [movedItem] = sourceList.splice(source.index, 1);
+
+    // Adiciona o item à lista de destino
+    destList.splice(destination.index, 0, movedItem);
+
+    // Atualiza os estados
+    setSourceList([...sourceList]);
+    setDestList([...destList]);
+  }
+
+  return (
+    <PageStyled>
+      <InputContainer>
+        <input
+          type="text"
+          placeholder="Digite um nome"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
+        <button onClick={addNameToList}>Adicionar</button>
+      </InputContainer>
+
+      <ActionsList name={"lucas"} double={"soares"} />
+
+      <ContainerLists>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="list1" type="list" direction="vertical">
+            {(provided) => (
+              <ListDiv ref={provided.innerRef} {...provided.droppableProps}>
+                {list.map((item, index) => (
+                  <Card key={item.id} info={item} index={index} />
+                ))}
+                {provided.placeholder}
+              </ListDiv>
+            )}
+          </Droppable>
+          <Droppable droppableId="list2" type="list" direction="vertical">
+            {(provided) => (
+              <ListDiv ref={provided.innerRef} {...provided.droppableProps}>
+                {list2.map((item, index) => (
+                  <Card key={item.id} info={item} index={index} />
+                ))}
+                {provided.placeholder}
+              </ListDiv>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </ContainerLists>
+    </PageStyled>
+  );
+}
+
+export default App;
+
+const PageStyled = styled.div`
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  background-color: lightgray;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+`;
+
+const InputContainer = styled.div`
+  display: flex;
+  gap: 10px;
+
+  input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    outline: none;
+  }
+
+  button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #0056b3;
+    }
+  }
+`;
+
+export const ListDiv = styled.div`
+  width: 250px;
+  height: 500px;
+  border-radius: 15px;
+  padding: 10px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  &.sub {
+    width: 100%;
+    height: 110px;
+    overflow-y: auto;
+    background-color: blue;
+  }
+`;
+
+const ContainerLists = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  .ListDiv {
+    width: 250px;
+    height: 500px;
+    border-radius: 15px;
+    padding: 10px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+`;
